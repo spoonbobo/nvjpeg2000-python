@@ -1,0 +1,3 @@
+/mnt/c/Users/seaso/source/repos/nvjpeg2000-python/decode/build/CMakeFiles/nvjpeg2000_decode_sample.dir
+/mnt/c/Users/seaso/source/repos/nvjpeg2000-python/decode/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/seaso/source/repos/nvjpeg2000-python/decode/build/CMakeFiles/rebuild_cache.dir

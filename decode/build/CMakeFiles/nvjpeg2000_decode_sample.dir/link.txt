@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -O3 -DNDEBUG CMakeFiles/nvjpeg2000_decode_sample.dir/nvjpeg2000DecodeSample.cpp.o -o nvjpeg2000_decode_sample  -Wl,-rpath,/usr/local/cuda/lib64 /usr/lib/x86_64-linux-gnu/libnvjpeg2k.so /usr/local/cuda/lib64/libcudart.so -lstdc++fs 

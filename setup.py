@@ -4,12 +4,12 @@ setup(
   packages = ['nvjpeg2000-python'],   # Chose the same as "name"
   version = '0.0.1',      # Start with a small number and increase it with every change you make
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
-  description = 'TYPE YOUR DESCRIPTION HERE',   # Give a short description about your library
-  author = 'YOUR NAME',                   # Type in your name
-  author_email = 'your.email@domain.com',      # Type in your E-Mail
-  url = 'https://github.com/user/reponame',   # Provide either the link to your github or to your website
+  description = 'Python interface for JPEG2000 Encoding/Decoding using GPU with nvJPEG.',   # Give a short description about your library
+  author = 'Season Poon',                   # Type in your name
+  author_email = 'seasonluke@gmail.com',      # Type in your E-Mail
+  url = 'https://github.com/spoonbobo/nvjpeg2000-python',   # Provide either the link to your github or to your website
   download_url = 'https://github.com/user/reponame/archive/v_01.tar.gz',    # I explain this later on
-  keywords = ['SOME', 'MEANINGFULL', 'KEYWORDS'],   # Keywords that define your package best
+  keywords = ['jpeg', 'image', 'jpeg2000'],   # Keywords that define your package best
   install_requires=[            # I get to this in a second
           'validators',
           'beautifulsoup4',

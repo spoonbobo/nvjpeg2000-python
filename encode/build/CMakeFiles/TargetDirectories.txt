@@ -1,0 +1,3 @@
+/mnt/c/Users/seaso/source/repos/nvjpeg2000-python/encode/build/CMakeFiles/nvjpeg2k_encode.dir
+/mnt/c/Users/seaso/source/repos/nvjpeg2000-python/encode/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/seaso/source/repos/nvjpeg2000-python/encode/build/CMakeFiles/rebuild_cache.dir
