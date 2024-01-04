@@ -1,12 +1,73 @@
-from Cython.Build import cythonize
-from distutils.core import setup, Extension
+# setup.py reference: # https://github.com/oKatanaaa/CudaCythonSamples/blob/master/vec_sum/setup.py
+
+import os
+from os.path import join as pjoin
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
+from icecream import ic
 import numpy
 
+def find_in_path(name, path):
+    """Find a file in a search path"""
+
+    # Adapted fom http://code.activestate.com/recipes/52224
+    for dir in path.split(os.pathsep):
+        binpath = pjoin(dir, name)
+        if os.path.exists(binpath):
+            return os.path.abspath(binpath)
+    return None
+
+
+def locate_cuda():
+    """
+    Locate the CUDA environment on the system
+    Returns a dict with keys 'home', 'nvcc', 'include', and 'lib64'
+    and values giving the absolute path to each directory.
+    Starts by looking for the CUDAHOME env variable. If not found,
+    everything is based on finding 'nvcc' in the PATH.
+    """
+
+    # First check if the CUDAHOME env variable is in use
+    if 'CUDAHOME' in os.environ:
+        home = os.environ['CUDAHOME']
+        nvcc = pjoin(home, 'bin')
+    else:
+        # Otherwise, search the PATH for NVCC
+        nvcc = find_in_path('nvcc', os.environ['PATH'])
+        if nvcc is None:
+            raise EnvironmentError('The nvcc binary could not be '
+                                   'located in your $PATH. Either add it to your path, '
+                                   'or set $CUDAHOME')
+        home = os.path.dirname(os.path.dirname(nvcc))
+
+    cudaconfig = {'home': home, 'nvcc': nvcc,
+                  'include': pjoin(home, 'include'),
+                  'lib64': pjoin(home, 'lib64')}
+
+    for k, v in iter(cudaconfig.items()):
+        if not os.path.exists(v):
+            raise EnvironmentError('The CUDA %s path could not be '
+                                   'located in %s' % (k, v))
+
+    return cudaconfig
+
+
+CUDA = locate_cuda()
+ic(CUDA)
+
+ext = Extension('cudaext',
+                sources=['wrapper.pyx'],
+                libraries=['lib/kernel', 'cudart'],
+                language='c++',
+                include_dirs=[CUDA['include']],
+                library_dirs=[CUDA['lib64']],
+                # extra_compile_args=['/openmp']
+                )
+
 setup(
-  name = 'nvjpeg2000-python',         # How you named your package folder (MyLib)
-  packages = ['nvjpeg2000-python'],   # Chose the same as "name"
-  version = '0.0.1',      # Start with a small number and increase it with every change you make
-  license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
-  ext_modules=cythonize("nvjpeg2000.pyx"),
-  include_dirs=[numpy.get_include()]
+    name='nvjpeg2000-python',
+    include_dirs=[CUDA['include'], numpy.get_include()],
+    ext_modules=[ext],
+    cmdclass={'build_ext': build_ext},
 )
