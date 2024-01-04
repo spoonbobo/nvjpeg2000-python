@@ -3,6 +3,8 @@
 
 # test files
 images
+decode/build
+encode/build
 
 # linkers/compile files
 *.c
@@ -10,3 +12,4 @@ images
 wrapper.cpp
 
 build
+*.deb

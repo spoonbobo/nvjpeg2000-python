@@ -5,6 +5,7 @@ from os.path import join as pjoin
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
+from Cython.Build import cythonize
 from icecream import ic
 import numpy
 
@@ -57,8 +58,8 @@ CUDA = locate_cuda()
 ic(CUDA)
 
 ext = Extension('cudaext',
-                sources=['wrapper.pyx'],
-                libraries=['lib/kernel', 'cudart'],
+                sources=['wrapper.pyx', 'encode/kernel.cpp'],
+                libraries=['cudart'],
                 language='c++',
                 include_dirs=[CUDA['include']],
                 library_dirs=[CUDA['lib64']],
@@ -68,6 +69,6 @@ ext = Extension('cudaext',
 setup(
     name='nvjpeg2000-python',
     include_dirs=[CUDA['include'], numpy.get_include()],
-    ext_modules=[ext],
+    ext_modules=cythonize([ext]),
     cmdclass={'build_ext': build_ext},
 )
