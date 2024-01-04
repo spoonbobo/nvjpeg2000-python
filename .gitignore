@@ -3,3 +3,9 @@
 
 # test files
 images
+
+# linkers/compile files
+*.c
+*.so
+
+build
