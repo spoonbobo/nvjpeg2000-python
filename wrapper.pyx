@@ -7,11 +7,11 @@ from icecream import ic
 
 cdef extern from "encode/kernel.h":
     float gpu_encode(unsigned char* image, int batch_size,
-                    int height, int width)
+                    int height, int width, int dev)
 
 # MemoryView as lower-c performances 
-def cuda_encode(unsigned char[:,:,:] image, int batch_size, int height, int width):
-    return gpu_encode(&image[0, 0, 0], batch_size, height, width)
+def cuda_encode(unsigned char[:,:,:] image, int batch_size, int height, int width, int dev):
+    return gpu_encode(&image[0, 0, 0], batch_size, height, width, dev)
 
 def cuda_decode():
     raise NotImplementedError

@@ -63,7 +63,6 @@ ext = Extension('cudaext',
                 language='c++',
                 include_dirs=[CUDA['include'], '/usr/include'],
                 library_dirs=[CUDA['lib64']],
-                # extra_compile_args=['/openmp']
                 )
 
 setup(

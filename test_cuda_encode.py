@@ -9,4 +9,4 @@ image_path = "images/dog.jpeg"
 image = np.array(Image.open(image_path)) # int8
 ic(image.shape)
 ic(image[0][0][0])
-ic(cuda_encode(image, 1, image.shape[1], image.shape[0]))
+ic(cuda_encode(image, 1, image.shape[1], image.shape[0], 0))

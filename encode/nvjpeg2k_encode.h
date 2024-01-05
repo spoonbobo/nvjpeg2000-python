@@ -52,6 +52,9 @@ namespace fs = std::experimental::filesystem::v1;
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
 
+float gpu_encode(unsigned char* image, int batch_size,
+                    int height, int width, int dev);
+
 #define CHECK_CUDA(call)                                                                                          \
     {                                                                                                             \
         cudaError_t _e = (call);                                                                                  \
@@ -82,7 +85,7 @@ class Image
     std::vector<void *>  pixel_data_d_;
     std::vector<void *>  pixel_data_h_;
     std::vector<size_t> pitch_in_bytes_d_;
-    std::vector<size_t> pitch_in_bytes_h_;
+    std::vector<size_t> pitch_in_bytes_h_;e
     
     std::vector<size_t> pixel_data_size_;
     uint32_t capacity_;
