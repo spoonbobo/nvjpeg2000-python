@@ -9,11 +9,11 @@ Python interface for JPEG2000 Encoding/Decoding using GPU with nvJPEG.
 `pip install nyjpeg2000-pyhon`
 
 # Build
-`python3 setup.py build_ext --inplace -f``
+`python3 setup.py build_ext --inplace -f`
 
 # TODOs
-[] Encoder
-[] Decoder
-[] Tests
+[ ] Encoder
+[ ] Decoder
+[ ] Tests
 
 # References
