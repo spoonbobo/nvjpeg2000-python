@@ -12,8 +12,8 @@ Python interface for JPEG2000 Encoding/Decoding using GPU with nvJPEG.
 `python3 setup.py build_ext --inplace -f`
 
 # TODOs
-[ ] Encoder
-[ ] Decoder
-[ ] Tests
+- [ ] Encoder
+- [ ] Decoder
+- [ ] Tests
 
 # References
