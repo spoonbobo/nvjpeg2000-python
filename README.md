@@ -2,14 +2,18 @@
 Python interface for JPEG2000 Encoding/Decoding using GPU with nvJPEG.
 
 # Requirements
-* CUDA toolkit
-* nvJPEG2000
+* [CUDA toolkit](https://developer.nvidia.com/cuda-toolkit)
+* [nvJPEG2000](https://developer.nvidia.com/nvjpeg)
 
 # Setup
-hopefully will get it done `pip install nyjpeg2000-pyhon`
+`pip install nyjpeg2000-pyhon`
+
+# Build
+`python3 setup.py build_ext --inplace -f``
 
 # TODOs
-* extern c/c++ code to Python interface
-* register at PyPi
+[] Encoder
+[] Decoder
+[] Tests
 
 # References

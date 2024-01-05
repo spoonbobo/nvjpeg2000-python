@@ -6,11 +6,12 @@ from icecream import ic
 # ".shape" on a typed Numpy array use this API.
 
 cdef extern from "encode/kernel.h":
-    float gpu_encode(float* a, float* b, float* c)
+    float gpu_encode(float* image, int batch_size,
+                    int height, int width)
 
 # MemoryView as lower-c performances 
-def cuda_encode(float[:, :] a, float[:, :] b, float[:, :] c):
-    return gpu_encode(&a[0, 0], &b[0, 0], &c[0, 0])
+def cuda_encode(float[:,:,:] image, int batch_size, int height, int width):
+    return gpu_encode(&image[0, 0, 0], batch_size, height, width)
 
 def cuda_decode():
     raise NotImplementedError

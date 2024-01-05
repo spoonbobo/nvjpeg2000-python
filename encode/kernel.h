@@ -1,3 +1,4 @@
-float gpu_encode(float* a, float* b, float* c);
+#include <string>
 
-float gpu_decode(float* a, float* b, float* c);
+float gpu_encode(float* image, int batch_size,
+                 int height, int width);
