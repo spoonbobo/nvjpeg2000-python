@@ -59,16 +59,16 @@ ic(CUDA)
 
 ext = Extension('cudaext',
                 sources=['wrapper.pyx', 'encode/kernel.cpp'],
-                libraries=['cudart'],
+                libraries=['cudart', 'nvjpeg2k'],
                 language='c++',
-                include_dirs=[CUDA['include'], '/usr/include/libnvjpeg2k/12'],
+                include_dirs=[CUDA['include'], '/usr/include'],
                 library_dirs=[CUDA['lib64']],
                 # extra_compile_args=['/openmp']
                 )
 
 setup(
     name='nvjpeg2000-python',
-    include_dirs=[CUDA['include'], numpy.get_include(), '/usr/include/libnvjpeg2k/12'],
+    include_dirs=[CUDA['include'], numpy.get_include(), '/usr/include'],
     ext_modules=cythonize([ext]),
     cmdclass={'build_ext': build_ext},
 )
