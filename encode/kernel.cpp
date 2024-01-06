@@ -1,16 +1,14 @@
 #include <iostream>
 #include <stdlib.h>
 #include "kernel.h"
-
+#include <icecream.hpp>
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
 
 float gpu_encode(unsigned char* image, int batch_size,
-                    int height, int width, int dev) {
+                    int* height, int* width, int dev) {
     encode_params_t params;
     params.batch_size = batch_size;
-    params.height = height;
-    params.width = width;
     params.cblk_w = 64;
     params.cblk_h = 64;
     params.dev = dev;
@@ -30,8 +28,11 @@ float gpu_encode(unsigned char* image, int batch_size,
     CHECK_NVJPEG2K(nvjpeg2kEncodeStateCreate(params.enc_handle, &params.enc_state));
     CHECK_NVJPEG2K(nvjpeg2kEncodeParamsCreate(&params.enc_params));
 
-    // read array
-    
+    // batch read array
+    printf("batch size: %d\n", params.batch_size);
+    std::vector<Image> input_images(params.batch_size);
+
+    IC(input_images.size());
 
     // free encoder resources
     CHECK_NVJPEG2K(nvjpeg2kEncodeParamsDestroy(params.enc_params));
