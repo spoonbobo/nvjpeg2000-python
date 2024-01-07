@@ -5,8 +5,29 @@
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
 
-float gpu_encode(unsigned char* image, int batch_size,
-                    int* height, int* width, int dev) {
+int read_batch_images(unsigned char *images, int* height, int* width,
+                      std::vector<Image> &images_input, encode_params_t params)
+{
+    int counter, offset;
+    counter = offset = 0;
+    while (counter < params.batch_size)
+    {
+        unsigned char* image;
+        int offset = 0;
+        image = &images[offset];
+        IC(image[0], image[1], image[2]);
+
+        // next image
+        counter++;
+        offset += width[counter]*height[counter]*3;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+float gpu_encode(unsigned char *images, int batch_size,
+                 int *height, int *width, int dev)
+{
     encode_params_t params;
     params.batch_size = batch_size;
     params.cblk_w = 64;
@@ -18,11 +39,12 @@ float gpu_encode(unsigned char* image, int batch_size,
     cudaDeviceProp props;
     cudaGetDevice(&dev);
     cudaGetDeviceProperties(&props, dev);
-    
-    if (params.verbose) {
+
+    if (params.verbose)
+    {
         printf("Using GPU - %s with CC %d.%d\n", props.name, props.major, props.minor);
     }
-    
+
     // initialize encoder
     CHECK_NVJPEG2K(nvjpeg2kEncoderCreateSimple(&params.enc_handle));
     CHECK_NVJPEG2K(nvjpeg2kEncodeStateCreate(params.enc_handle, &params.enc_state));
@@ -32,12 +54,12 @@ float gpu_encode(unsigned char* image, int batch_size,
     printf("batch size: %d\n", params.batch_size);
     std::vector<Image> input_images(params.batch_size);
 
-    IC(input_images.size());
+    read_batch_images(images, height, width, input_images, params);
 
     // free encoder resources
     CHECK_NVJPEG2K(nvjpeg2kEncodeParamsDestroy(params.enc_params));
     CHECK_NVJPEG2K(nvjpeg2kEncodeStateDestroy(params.enc_state));
     CHECK_NVJPEG2K(nvjpeg2kEncoderDestroy(params.enc_handle));
-    
-    return image[0];
+
+    return images[0];
 }
