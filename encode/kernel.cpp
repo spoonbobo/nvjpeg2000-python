@@ -29,29 +29,30 @@
 #include <iostream>
 #include <stdlib.h>
 #include "kernel.h"
+
 #include <icecream.hpp>
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
 
 /** populate encoder config, encode input image
  * more references on https://docs.nvidia.com/cuda/nvjpeg2000/userguide.html#nvjpeg2kencodeconfig-label
- * 
+ *
  * @param
- * @return 
+ * @return
  */
-void populate_encoderconfig(nvjpeg2kEncodeConfig_t& enc_config, Image& input_image, encode_params_t &params)
+void populate_encoderconfig(nvjpeg2kEncodeConfig_t &enc_config, Image &input_image, encode_params_t &params)
 {
     memset(&enc_config, 0, sizeof(enc_config));
-    enc_config.stream_type =  NVJPEG2K_STREAM_JP2; // NVJPEG2K_STREAM_JP2 corresponds to the .jp2 container.
+    enc_config.stream_type = NVJPEG2K_STREAM_JP2; // NVJPEG2K_STREAM_JP2 corresponds to the .jp2 container.
     enc_config.color_space = input_image.getColorSpace();
-    enc_config.image_width =  input_image.getnvjpeg2kImageInfo().image_width;
+    enc_config.image_width = input_image.getnvjpeg2kImageInfo().image_width;
     enc_config.image_height = input_image.getnvjpeg2kImageInfo().image_height;
     enc_config.num_components = input_image.getnvjpeg2kImageInfo().num_components;
     enc_config.image_comp_info = input_image.getnvjpeg2kCompInfo();
     enc_config.code_block_w = (uint32_t)params.cblk_w;
     enc_config.code_block_h = (uint32_t)params.cblk_h;
-    enc_config.irreversible = (uint32_t)params.irreversible; 
-    enc_config.mct_mode = enc_config.color_space == NVJPEG2K_COLORSPACE_SRGB ? 1 : 0;
+    enc_config.irreversible = (uint32_t)params.irreversible;
+    enc_config.mct_mode = 1; // 0 (YCC and Grayscale) , 1 (RGB)
     enc_config.prog_order = NVJPEG2K_LRCP; // defined in the JPEG2000 standard.
     enc_config.num_resolutions = 6;
 }
@@ -67,7 +68,7 @@ void populate_encoderconfig(nvjpeg2kEncodeConfig_t& enc_config, Image& input_ima
  * @return exit code
  */
 int read_batch_images(unsigned char *images, int *height, int *width,
-                      std::vector<Image> &images_input, encode_params_t params)
+                      std::vector<Image> &images_input, encode_params_t& params)
 {
     int counter, offset, stride;
     counter = offset = 0;
@@ -105,6 +106,7 @@ int read_batch_images(unsigned char *images, int *height, int *width,
         {
             for (unsigned int x = 0; x < nvjpeg2k_info.image_width; x++)
             {
+                // IC(raw_image[y * stride + (3 * x + 0)]);
                 r[y * img.pitch_in_bytes[0] + x] = raw_image[y * stride + (3 * x + 0)];
                 g[y * img.pitch_in_bytes[1] + x] = raw_image[y * stride + (3 * x + 1)];
                 b[y * img.pitch_in_bytes[2] + x] = raw_image[y * stride + (3 * x + 2)];
@@ -121,14 +123,13 @@ int read_batch_images(unsigned char *images, int *height, int *width,
     return EXIT_SUCCESS;
 }
 
-
 /**
  * encode nvJPEG2000 image inputs into nvJPEG2000 images
- * @param images_input 
+ * @param images_input
  * @param time perf
  * @return exit code
  */
-int encode_images(std::vector<Image> &input_images, BitStreamData &bitstreams, double &time, encode_params_t params)
+int encode_images(Image *input_images, BitStreamData &bitstreams, double &time, encode_params_t &params)
 {
     cudaEvent_t startEvent = NULL, stopEvent = NULL;
     float loopTime = 0;
@@ -144,20 +145,22 @@ int encode_images(std::vector<Image> &input_images, BitStreamData &bitstreams, d
         populate_encoderconfig(enc_config, input_images[batch_id], params);
         CHECK_NVJPEG2K(nvjpeg2kEncodeParamsSetEncodeConfig(params.enc_params, &enc_config));
         CHECK_NVJPEG2K(nvjpeg2kEncodeParamsSetQuality(params.enc_params, params.target_psnr));
-        CHECK_NVJPEG2K(nvjpeg2kEncode(params.enc_handle, params.enc_state, params.enc_params, 
-            &input_images[batch_id].getImageDevice(), params.stream));
-        CHECK_NVJPEG2K(nvjpeg2kEncodeRetrieveBitstream(params.enc_handle, params.enc_state, NULL, &bs_sz, 
-            params.stream));
+        CHECK_NVJPEG2K(nvjpeg2kEncode(params.enc_handle, params.enc_state, params.enc_params,
+                                      &input_images[batch_id].getImageDevice(), params.stream));
+        CHECK_NVJPEG2K(nvjpeg2kEncodeRetrieveBitstream(params.enc_handle, params.enc_state, NULL, &bs_sz,
+                                                       params.stream));
         bitstreams[batch_id].resize(bs_sz);
-        CHECK_NVJPEG2K(nvjpeg2kEncodeRetrieveBitstream(params.enc_handle, params.enc_state, bitstreams[batch_id].data(), &bs_sz, 
-            params.stream));
+        std::cout << bs_sz << std::endl;
+
+        CHECK_NVJPEG2K(nvjpeg2kEncodeRetrieveBitstream(params.enc_handle, params.enc_state, bitstreams[batch_id].data(), &bs_sz,
+                                                       params.stream));
         CHECK_CUDA(cudaStreamSynchronize(params.stream));
     }
 
     CHECK_CUDA(cudaEventRecord(stopEvent, params.stream));
     CHECK_CUDA(cudaEventSynchronize(stopEvent));
     CHECK_CUDA(cudaEventElapsedTime(&loopTime, startEvent, stopEvent));
-    time += static_cast<double>(loopTime/1000.0); // loopTime is in milliseconds
+    time += static_cast<double>(loopTime / 1000.0); // loopTime is in milliseconds
 
     CHECK_CUDA(cudaEventDestroy(stopEvent));
     CHECK_CUDA(cudaEventDestroy(startEvent));
@@ -183,12 +186,14 @@ float gpu_encode(unsigned char *images, int batch_size,
     params.cblk_h = 64;
     params.dev = dev;
     params.verbose = 1;
+    params.target_psnr = 6;
     params.irreversible = 1; // reversible wavelet transform
 
-    // query device
+    // device setting
     cudaDeviceProp props;
     cudaGetDevice(&dev);
     cudaGetDeviceProperties(&props, dev);
+
     cudaSetDevice(dev);
 
     if (params.verbose)
@@ -202,7 +207,11 @@ float gpu_encode(unsigned char *images, int batch_size,
     CHECK_NVJPEG2K(nvjpeg2kEncodeParamsCreate(&params.enc_params));
 
     // batch read array
-    printf("batch size: %d\n", params.batch_size);
+    if (params.verbose)
+    {
+        printf("batch size: %d\n", params.batch_size);
+    }
+
     std::vector<Image> input_images(params.batch_size);
     CHECK_CUDA(cudaStreamCreateWithFlags(&params.stream, cudaStreamNonBlocking));
 
@@ -216,11 +225,10 @@ float gpu_encode(unsigned char *images, int batch_size,
     // typedef std::vector<std::vector<unsigned char>> BitStreamData
     BitStreamData bitsteam_output(params.batch_size);
 
-    if (encode_images(input_images, bitsteam_output, time, params))
+    if (encode_images(input_images.data(), bitsteam_output, time, params))
     {
         return EXIT_FAILURE;
     }
-
 
     CHECK_CUDA(cudaStreamDestroy(params.stream));
 

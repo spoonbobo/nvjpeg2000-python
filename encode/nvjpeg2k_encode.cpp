@@ -136,6 +136,7 @@ int read_bmp(std::ifstream& file_input, Image& image)
             r[y * img.pitch_in_bytes[0] + x] = raw_bmp[y_bmp * stride + (3 * x + 2)];
             g[y * img.pitch_in_bytes[1] + x] = raw_bmp[y_bmp * stride + (3 * x + 1)];
             b[y * img.pitch_in_bytes[2] + x] = raw_bmp[y_bmp * stride + (3 * x + 0)];
+            // printf("%d\n", raw_bmp[y_bmp * stride + (3 * x + 2)]);
         }
     }
     return EXIT_SUCCESS;
@@ -406,6 +407,7 @@ int encode_images(Image* input_images, encode_params_t &params, BitStreamData &b
         CHECK_NVJPEG2K(nvjpeg2kEncodeRetrieveBitstream(params.enc_handle, params.enc_state, NULL, &bs_sz, 
             params.stream));
         bitstreams[batch_id].resize(bs_sz);
+        std::cout << bs_sz << std::endl;
         CHECK_NVJPEG2K(nvjpeg2kEncodeRetrieveBitstream(params.enc_handle, params.enc_state, bitstreams[batch_id].data(), &bs_sz, 
             params.stream));
         CHECK_CUDA(cudaStreamSynchronize(params.stream));

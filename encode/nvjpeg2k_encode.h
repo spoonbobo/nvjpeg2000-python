@@ -1,4 +1,3 @@
-#pragma once
 /*
  * Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
  *
@@ -52,9 +51,6 @@ namespace fs = std::experimental::filesystem::v1;
 
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
-
-float gpu_encode(unsigned char* image, int batch_size,
-                    int* height, int* width, int dev);
 
 #define CHECK_CUDA(call)                                                                                          \
     {                                                                                                             \
@@ -251,10 +247,6 @@ class Image
         }
         for (uint32_t c = 0; c < image_d_.num_components; c++)
         {
-            // unsigned char*  r = reinterpret_cast<unsigned char*>(image_h_.pixel_data[c]);
-            // for (int i=0; i<10; i++) {
-            //     std::cout << (int)r[i] << std::endl;
-            // }
             CHECK_CUDA(cudaMemcpy2D(image_d_.pixel_data[c], image_d_.pitch_in_bytes[c], image_h_.pixel_data[c], image_h_.pitch_in_bytes[c], 
                 comp_info_[c].component_width * bytes_per_comp,
                 comp_info_[c].component_height, cudaMemcpyHostToDevice));
@@ -274,7 +266,6 @@ struct encode_params_t
     int irreversible;
     int cblk_w;
     int cblk_h;
-    int verbose;
     double target_psnr;
     nvjpeg2kEncoder_t enc_handle;
     nvjpeg2kEncodeState_t enc_state;
@@ -286,3 +277,97 @@ struct encode_params_t
     bool write_bitstream;
     bool img_fmt_init;
 };
+
+double Wtime(void)
+{
+#if defined(_WIN32)
+    LARGE_INTEGER t;
+    static double oofreq;
+    static int checkedForHighResTimer;
+    static BOOL hasHighResTimer;
+
+    if (!checkedForHighResTimer)
+    {
+        hasHighResTimer = QueryPerformanceFrequency(&t);
+        oofreq = 1.0 / (double)t.QuadPart;
+        checkedForHighResTimer = 1;
+    }
+    if (hasHighResTimer)
+    {
+        QueryPerformanceCounter(&t);
+        return (double)t.QuadPart * oofreq;
+    }
+    else
+    {
+        return (double)GetTickCount() / 1000.0;
+    }
+#else
+    struct timespec tp;
+    int rv = clock_gettime(CLOCK_MONOTONIC, &tp);
+
+    if (rv)
+        return 0;
+
+    return tp.tv_nsec / 1.0E+9 + (double)tp.tv_sec;
+
+#endif
+}
+// *****************************************************************************
+// reading input directory to file list
+// -----------------------------------------------------------------------------
+int readInput(const std::string &sInputPath, std::vector<std::string> &filelist)
+{
+    if( fs::is_regular_file(sInputPath))
+    {
+        filelist.push_back(sInputPath);
+    }
+    else if (fs::is_directory(sInputPath))
+    { 
+        fs::recursive_directory_iterator iter(sInputPath);
+        for(auto& p: iter)
+        {
+           if( fs::is_regular_file(p))
+           {
+                filelist.push_back(p.path().string());
+           }
+        }
+    }
+    else
+    {
+        std::cout<<"unable to open input"<<std::endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+// *****************************************************************************
+// parse parameters
+// -----------------------------------------------------------------------------
+int findParamIndex(const char **argv, int argc, const char *parm)
+{
+    int count = 0;
+    int index = -1;
+
+    for (int i = 0; i < argc; i++)
+    {
+        if (strncmp(argv[i], parm, 100) == 0)
+        {
+            index = i;
+            count++;
+        }
+    }
+
+    if (count == 0 || count == 1)
+    {
+        return index;
+    }
+    else
+    {
+        std::cout << "Error, parameter " << parm
+                  << " has been specified more than once, exiting\n"
+                  << std::endl;
+        return -1;
+    }
+
+    return -1;
+}

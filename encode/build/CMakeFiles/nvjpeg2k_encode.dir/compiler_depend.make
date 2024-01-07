@@ -3,6 +3,7 @@
 
 CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
   /usr/include/stdc-predef.h \
+  ../nvjpeg2k_encode.h \
   /usr/include/c++/11/iostream \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \
@@ -294,8 +295,62 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
   /usr/include/nvjpeg2k.h \
   /usr/include/c++/11/stdlib.h \
   /usr/local/cuda/targets/x86_64-linux/include/library_types.h \
-  /usr/include/nvjpeg2k_version.h
+  /usr/include/nvjpeg2k_version.h \
+  /usr/include/c++/11/cmath \
+  /usr/include/math.h \
+  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
+  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
+  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-logb.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-fast.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
+  /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
+  /usr/include/c++/11/bits/specfun.h \
+  /usr/include/c++/11/tr1/gamma.tcc \
+  /usr/include/c++/11/tr1/special_function_util.h \
+  /usr/include/c++/11/tr1/bessel_function.tcc \
+  /usr/include/c++/11/tr1/beta_function.tcc \
+  /usr/include/c++/11/tr1/ell_integral.tcc \
+  /usr/include/c++/11/tr1/exp_integral.tcc \
+  /usr/include/c++/11/tr1/hypergeometric.tcc \
+  /usr/include/c++/11/tr1/legendre_function.tcc \
+  /usr/include/c++/11/tr1/modified_bessel_func.tcc \
+  /usr/include/c++/11/tr1/poly_hermite.tcc \
+  /usr/include/c++/11/tr1/poly_laguerre.tcc \
+  /usr/include/c++/11/tr1/riemann_zeta.tcc
 
+
+/usr/include/c++/11/tr1/riemann_zeta.tcc:
+
+/usr/include/c++/11/tr1/poly_laguerre.tcc:
+
+/usr/include/c++/11/tr1/poly_hermite.tcc:
+
+/usr/include/c++/11/tr1/modified_bessel_func.tcc:
+
+/usr/include/c++/11/tr1/hypergeometric.tcc:
+
+/usr/include/c++/11/tr1/exp_integral.tcc:
+
+/usr/include/c++/11/tr1/ell_integral.tcc:
+
+/usr/include/c++/11/tr1/bessel_function.tcc:
+
+/usr/include/c++/11/tr1/special_function_util.h:
+
+/usr/include/c++/11/bits/specfun.h:
+
+/usr/include/x86_64-linux-gnu/bits/iscanonical.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
+
+/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
+
+/usr/include/x86_64-linux-gnu/bits/math-vector.h:
 
 /usr/include/nvjpeg2k_version.h:
 
@@ -381,8 +436,6 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/locale.h:
 
-/usr/include/locale.h:
-
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
 
 /usr/include/c++/11/bits/localefwd.h:
@@ -445,6 +498,12 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h:
 
+/usr/include/nvjpeg2k.h:
+
+/usr/include/c++/11/debug/assertions.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h:
+
 /usr/include/x86_64-linux-gnu/bits/timesize.h:
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/cpu_defines.h:
@@ -452,6 +511,8 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 /usr/include/c++/11/exception:
 
 /usr/include/c++/11/bits/invoke.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h:
 
 /usr/include/c++/11/bits/postypes.h:
 
@@ -495,9 +556,13 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 
+/usr/include/c++/11/tr1/gamma.tcc:
+
 /usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
 
 /usr/include/x86_64-linux-gnu/sys/stat.h:
+
+/usr/include/x86_64-linux-gnu/bits/fp-fast.h:
 
 /usr/include/c++/11/iostream:
 
@@ -525,6 +590,8 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 
 /usr/include/c++/11/pstl/pstl_config.h:
 
+/usr/include/c++/11/cmath:
+
 /usr/include/c++/11/bits/allocator.h:
 
 /usr/include/c++/11/bits/char_traits.h:
@@ -547,15 +614,17 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h:
 
-/usr/include/nvjpeg2k.h:
+/usr/include/locale.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h:
+../nvjpeg2k_encode.h:
 
-/usr/include/c++/11/debug/assertions.h:
+/usr/include/c++/11/bits/charconv.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
 
 /usr/include/c++/11/bits/ostream_insert.h:
+
+/usr/include/c++/11/tr1/legendre_function.tcc:
 
 /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
 
@@ -585,6 +654,10 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 
 /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h:
 
+/usr/include/x86_64-linux-gnu/bits/statx.h:
+
+/usr/include/c++/11/bits/stl_algobase.h:
+
 /usr/include/c++/11/bits/nested_exception.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
@@ -600,6 +673,8 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 /usr/include/c++/11/bits/stl_iterator_base_types.h:
 
 /usr/include/c++/11/cstdlib:
+
+/usr/include/x86_64-linux-gnu/bits/fp-logb.h:
 
 /usr/include/x86_64-linux-gnu/bits/wchar2.h:
 
@@ -664,6 +739,8 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 /usr/include/c++/11/bits/cpp_type_traits.h:
 
 /usr/include/c++/11/bits/stl_iterator_base_funcs.h:
+
+/usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h:
 
@@ -737,8 +814,6 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/types/error_t.h:
 
-/usr/include/c++/11/bits/charconv.h:
-
 /usr/include/c++/11/bits/basic_string.tcc:
 
 /usr/include/c++/11/bits/locale_classes.tcc:
@@ -787,10 +862,6 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h:
 
-/usr/include/c++/11/bits/stl_algobase.h:
-
-/usr/include/x86_64-linux-gnu/bits/statx.h:
-
 /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h:
 
 /usr/include/asm-generic/posix_types.h:
@@ -827,6 +898,8 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 
 /usr/include/c++/11/bits/stl_heap.h:
 
+/usr/include/c++/11/tr1/beta_function.tcc:
+
 /usr/include/c++/11/array:
 
 /usr/include/c++/11/bits/uses_allocator.h:
@@ -856,6 +929,8 @@ CMakeFiles/nvjpeg2k_encode.dir/nvjpeg2k_encode.cpp.o: ../nvjpeg2k_encode.cpp \
 /usr/include/endian.h:
 
 /usr/include/c++/11/bits/erase_if.h:
+
+/usr/include/math.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 
