@@ -23,14 +23,32 @@ int read_batch_images(unsigned char *images, int* height, int* width,
     
     while (counter < params.batch_size)
     {
-        unsigned char* image = &images[offset];
-        IC(offset, image[0], image[1], image[2]);
-        
+        unsigned char* image = &images[offset];    
+
         nvjpeg2kImageInfo_t nvjpeg2k_info;
         std::vector<nvjpeg2kImageComponentInfo_t> nvjpeg2k_comp_info;
         nvjpeg2kColorSpace_t color_space = NVJPEG2K_COLORSPACE_SRGB;
         
+        nvjpeg2k_info.num_components = 3;
+        nvjpeg2k_info.image_width = width[counter];
+        nvjpeg2k_info.image_height = height[counter];
+        nvjpeg2k_comp_info.resize(nvjpeg2k_info.num_components);
 
+        for(auto& comp: nvjpeg2k_comp_info) {
+            comp.component_width  = nvjpeg2k_info.image_width;
+            comp.component_height = nvjpeg2k_info.image_height;
+            comp.precision        = 8;
+            comp.sgn              = 0;
+        }
+
+        images_input[counter].initialize(nvjpeg2k_info, nvjpeg2k_comp_info.data(), color_space);
+        auto& img = images_input[counter].getImageHost();
+        unsigned char* r = reinterpret_cast<unsigned char*>(img.pixel_data[0]);
+        unsigned char* g = reinterpret_cast<unsigned char*>(img.pixel_data[1]);
+        unsigned char* b = reinterpret_cast<unsigned char*>(img.pixel_data[2]);
+
+        // Load data in image channels
+        
         // next image
         offset += width[counter]*height[counter]*3;
         counter++;
