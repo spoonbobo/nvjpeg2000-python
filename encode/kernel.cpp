@@ -5,21 +5,35 @@
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
 
+/**
+ * Load image arrays into nvJPEG2000 image inputs
+ * 
+ * @param images MemoryView, image(s) given batch_size
+ * @param height height(s) of image(s)
+ * @param width width(s) of image(s)
+ * @param images_input nvJPEG2000 image inputs
+ * @param params nvJPEG2000 encoding parameters 
+ * @return EXIT status
+ */
 int read_batch_images(unsigned char *images, int* height, int* width,
                       std::vector<Image> &images_input, encode_params_t params)
 {
     int counter, offset;
     counter = offset = 0;
+    
     while (counter < params.batch_size)
     {
-        unsigned char* image;
-        int offset = 0;
-        image = &images[offset];
-        IC(image[0], image[1], image[2]);
+        unsigned char* image = &images[offset];
+        IC(offset, image[0], image[1], image[2]);
+        
+        nvjpeg2kImageInfo_t nvjpeg2k_info;
+        std::vector<nvjpeg2kImageComponentInfo_t> nvjpeg2k_comp_info;
+        nvjpeg2kColorSpace_t color_space = NVJPEG2K_COLORSPACE_SRGB;
+        
 
         // next image
-        counter++;
         offset += width[counter]*height[counter]*3;
+        counter++;
     }
 
     return EXIT_SUCCESS;
@@ -39,6 +53,7 @@ float gpu_encode(unsigned char *images, int batch_size,
     cudaDeviceProp props;
     cudaGetDevice(&dev);
     cudaGetDeviceProperties(&props, dev);
+    cudaSetDevice(dev);
 
     if (params.verbose)
     {
