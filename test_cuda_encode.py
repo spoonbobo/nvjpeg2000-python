@@ -22,7 +22,7 @@ for path in image_paths:
 
 height = np.array(height).astype(np.int32)
 width = np.array(width).astype(np.int32)
-ic(images[0][0][0], images[1][0][0])
+ic(images[0][0:3][0], images[1][0:3][0])
 # in practise there might be varying batch-sizes
 # to enable batching in cuda_encode, we need to flatten all images,
 # concat them into single array with their heights info
