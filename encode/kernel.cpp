@@ -37,8 +37,9 @@
 /** populate encoder config, encode input image
  * more references on https://docs.nvidia.com/cuda/nvjpeg2000/userguide.html#nvjpeg2kencodeconfig-label
  *
- * @param
- * @return
+ * @param enc_config
+ * @param input_iamge
+ * @param params
  */
 void populate_encoderconfig(nvjpeg2kEncodeConfig_t &enc_config, Image &input_image, encode_params_t &params)
 {
@@ -55,6 +56,7 @@ void populate_encoderconfig(nvjpeg2kEncodeConfig_t &enc_config, Image &input_ima
     enc_config.mct_mode = 1; // 0 (YCC and Grayscale) , 1 (RGB)
     enc_config.prog_order = NVJPEG2K_LRCP; // defined in the JPEG2000 standard.
     enc_config.num_resolutions = 6;
+    std::cout << enc_config.image_width << " " << enc_config.image_height  << std::endl;
 }
 
 /**
@@ -110,6 +112,9 @@ int read_batch_images(unsigned char *images, int *height, int *width,
                 r[y * img.pitch_in_bytes[0] + x] = raw_image[y * stride + (3 * x + 0)];
                 g[y * img.pitch_in_bytes[1] + x] = raw_image[y * stride + (3 * x + 1)];
                 b[y * img.pitch_in_bytes[2] + x] = raw_image[y * stride + (3 * x + 2)];
+                if (y==0 && x<10)
+                    printf("%d, %d, %d\n", r[y * img.pitch_in_bytes[0] + x],g[y * img.pitch_in_bytes[1] + x],b[y * img.pitch_in_bytes[2] + x]);
+
             }
         }
 
@@ -138,6 +143,8 @@ int encode_images(Image *input_images, BitStreamData &bitstreams, double &time, 
     CHECK_CUDA(cudaEventCreateWithFlags(&stopEvent, cudaEventBlockingSync));
     nvjpeg2kEncodeConfig_t enc_config;
     size_t bs_sz;
+
+    std::cout << bs_sz << std::endl;
 
     CHECK_CUDA(cudaEventRecord(startEvent, params.stream));
     for (int batch_id = 0; batch_id < params.batch_size; batch_id++)

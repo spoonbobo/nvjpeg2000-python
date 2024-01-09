@@ -205,7 +205,7 @@ class Image
             size_t comp_size = comp_info_[c].component_height * image_d_.pitch_in_bytes[c];
             if( comp_size > pixel_data_size_[c])
             {
-                std::cout << "Check\n" << comp_size << " " << pixel_data_size_[c] << std::endl;
+                // std::cout << "Check\n" << comp_size << " " << pixel_data_size_[c] << std::endl;
                 if(image_d_.pixel_data[c])
                 {
                     CHECK_CUDA(cudaFree(image_d_.pixel_data[c])); 

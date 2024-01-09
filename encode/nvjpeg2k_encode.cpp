@@ -137,6 +137,8 @@ int read_bmp(std::ifstream& file_input, Image& image)
             g[y * img.pitch_in_bytes[1] + x] = raw_bmp[y_bmp * stride + (3 * x + 1)];
             b[y * img.pitch_in_bytes[2] + x] = raw_bmp[y_bmp * stride + (3 * x + 0)];
             // printf("%d\n", raw_bmp[y_bmp * stride + (3 * x + 2)]);
+            if (y==0 && x<10)
+                printf("%d, %d, %d\n", r[y * img.pitch_in_bytes[0] + x],g[y * img.pitch_in_bytes[1] + x],b[y * img.pitch_in_bytes[2] + x]);
         }
     }
     return EXIT_SUCCESS;
