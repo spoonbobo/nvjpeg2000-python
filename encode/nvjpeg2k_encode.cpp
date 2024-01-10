@@ -133,13 +133,15 @@ int read_bmp(std::ifstream& file_input, Image& image)
         y_bmp--; 
         for (uint32_t x = 0; x < nvjpeg2k_info.image_width; x++) 
         {
+
             r[y * img.pitch_in_bytes[0] + x] = raw_bmp[y_bmp * stride + (3 * x + 2)];
             g[y * img.pitch_in_bytes[1] + x] = raw_bmp[y_bmp * stride + (3 * x + 1)];
             b[y * img.pitch_in_bytes[2] + x] = raw_bmp[y_bmp * stride + (3 * x + 0)];
             // printf("%d\n", raw_bmp[y_bmp * stride + (3 * x + 2)]);
             if (y==0 && x<10)
-                printf("%d, %d, %d\n", r[y * img.pitch_in_bytes[0] + x],g[y * img.pitch_in_bytes[1] + x],b[y * img.pitch_in_bytes[2] + x]);
+                printf("%d, %d, %d\n", img.pitch_in_bytes[0], img.pitch_in_bytes[1], img.pitch_in_bytes[2]);
         }
+        std::cout << y << " " << y_bmp << std::endl;
     }
     return EXIT_SUCCESS;
 }

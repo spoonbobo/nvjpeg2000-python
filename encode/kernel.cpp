@@ -1,177 +1,31 @@
-/*
- * Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of NVIDIA CORPORATION nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 #include <iostream>
-#include <stdlib.h>
-#include "kernel.h"
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <fstream>
 
-#include <icecream.hpp>
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
 
-/** populate encoder config, encode input image
- * more references on https://docs.nvidia.com/cuda/nvjpeg2000/userguide.html#nvjpeg2kencodeconfig-label
- *
- * @param enc_config
- * @param input_iamge
- * @param params
- */
-void populate_encoderconfig(nvjpeg2kEncodeConfig_t &enc_config, Image &input_image, encode_params_t &params)
+#define NUM_COMPONENTS 3
+
+void check_cuda(cudaError_t status)
 {
-    memset(&enc_config, 0, sizeof(enc_config));
-    enc_config.stream_type = NVJPEG2K_STREAM_JP2; // NVJPEG2K_STREAM_JP2 corresponds to the .jp2 container.
-    enc_config.color_space = input_image.getColorSpace();
-    enc_config.image_width = input_image.getnvjpeg2kImageInfo().image_width;
-    enc_config.image_height = input_image.getnvjpeg2kImageInfo().image_height;
-    enc_config.num_components = input_image.getnvjpeg2kImageInfo().num_components;
-    enc_config.image_comp_info = input_image.getnvjpeg2kCompInfo();
-    enc_config.code_block_w = (uint32_t)params.cblk_w;
-    enc_config.code_block_h = (uint32_t)params.cblk_h;
-    enc_config.irreversible = (uint32_t)params.irreversible;
-    enc_config.mct_mode = 1; // 0 (YCC and Grayscale) , 1 (RGB)
-    enc_config.prog_order = NVJPEG2K_LRCP; // defined in the JPEG2000 standard.
-    enc_config.num_resolutions = 6;
-    std::cout << enc_config.image_width << " " << enc_config.image_height  << std::endl;
+    if (status != cudaSuccess)
+    {
+        std::cout << "CUDA Runtime failure: '#" << status << "' at " << __FILE__ << ":" << __LINE__ << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
-/**
- * Load image arrays into nvJPEG2000 image inputs
- *
- * @param images MemoryView, image(s) given batch_size
- * @param height height(s) of image(s)
- * @param width width(s) of image(s)
- * @param images_input nvJPEG2000 image inputs
- * @param params nvJPEG2000 encoding parameters
- * @return exit code
- */
-int read_batch_images(unsigned char *images, int *height, int *width,
-                      std::vector<Image> &images_input, encode_params_t& params)
+int check_nvjpeg2k(nvjpeg2kStatus_t call)
 {
-    int counter, offset, stride;
-    counter = offset = 0;
-
-    while (counter < params.batch_size)
+    if (call != NVJPEG2K_STATUS_SUCCESS)
     {
-        unsigned char *raw_image = &images[offset];
-
-        nvjpeg2kImageInfo_t nvjpeg2k_info;
-        std::vector<nvjpeg2kImageComponentInfo_t> nvjpeg2k_comp_info;
-        nvjpeg2kColorSpace_t color_space = NVJPEG2K_COLORSPACE_SRGB;
-
-        nvjpeg2k_info.num_components = 3;
-        nvjpeg2k_info.image_width = width[counter];
-        nvjpeg2k_info.image_height = height[counter];
-        stride = nvjpeg2k_info.image_width;
-        nvjpeg2k_comp_info.resize(nvjpeg2k_info.num_components);
-
-        for (auto &comp : nvjpeg2k_comp_info)
-        {
-            comp.component_width = nvjpeg2k_info.image_width;
-            comp.component_height = nvjpeg2k_info.image_height;
-            comp.precision = 8;
-            comp.sgn = 0;
-        }
-
-        images_input[counter].initialize(nvjpeg2k_info, nvjpeg2k_comp_info.data(), color_space);
-        auto &img = images_input[counter].getImageHost();
-        unsigned char *r = reinterpret_cast<unsigned char *>(img.pixel_data[0]);
-        unsigned char *g = reinterpret_cast<unsigned char *>(img.pixel_data[1]);
-        unsigned char *b = reinterpret_cast<unsigned char *>(img.pixel_data[2]);
-
-        // Load data in image channels
-        for (unsigned int y = 0; y < nvjpeg2k_info.image_height; y++)
-        {
-            for (unsigned int x = 0; x < nvjpeg2k_info.image_width; x++)
-            {
-                // IC(raw_image[y * stride + (3 * x + 0)]);
-                r[y * img.pitch_in_bytes[0] + x] = raw_image[y * stride + (3 * x + 0)];
-                g[y * img.pitch_in_bytes[1] + x] = raw_image[y * stride + (3 * x + 1)];
-                b[y * img.pitch_in_bytes[2] + x] = raw_image[y * stride + (3 * x + 2)];
-                if (y==0 && x<10)
-                    printf("%d, %d, %d\n", r[y * img.pitch_in_bytes[0] + x],g[y * img.pitch_in_bytes[1] + x],b[y * img.pitch_in_bytes[2] + x]);
-
-            }
-        }
-
-        // copy to device
-        images_input[counter].copyToDevice();
-
-        // next image
-        offset += width[counter] * height[counter] * 3;
-        counter++;
+        std::cout << "NVJPEG failure: '#" << call << "' at " << __FILE__ << ":" << __LINE__ << std::endl;
+        return EXIT_FAILURE;
     }
-    return EXIT_SUCCESS;
-}
-
-/**
- * encode nvJPEG2000 image inputs into nvJPEG2000 images
- * @param images_input
- * @param time perf
- * @return exit code
- */
-int encode_images(Image *input_images, BitStreamData &bitstreams, double &time, encode_params_t &params)
-{
-    cudaEvent_t startEvent = NULL, stopEvent = NULL;
-    float loopTime = 0;
-
-    CHECK_CUDA(cudaEventCreateWithFlags(&startEvent, cudaEventBlockingSync));
-    CHECK_CUDA(cudaEventCreateWithFlags(&stopEvent, cudaEventBlockingSync));
-    nvjpeg2kEncodeConfig_t enc_config;
-    size_t bs_sz;
-
-    std::cout << bs_sz << std::endl;
-
-    CHECK_CUDA(cudaEventRecord(startEvent, params.stream));
-    for (int batch_id = 0; batch_id < params.batch_size; batch_id++)
-    {
-        populate_encoderconfig(enc_config, input_images[batch_id], params);
-        CHECK_NVJPEG2K(nvjpeg2kEncodeParamsSetEncodeConfig(params.enc_params, &enc_config));
-        CHECK_NVJPEG2K(nvjpeg2kEncodeParamsSetQuality(params.enc_params, params.target_psnr));
-        CHECK_NVJPEG2K(nvjpeg2kEncode(params.enc_handle, params.enc_state, params.enc_params,
-                                      &input_images[batch_id].getImageDevice(), params.stream));
-        CHECK_NVJPEG2K(nvjpeg2kEncodeRetrieveBitstream(params.enc_handle, params.enc_state, NULL, &bs_sz,
-                                                       params.stream));
-        bitstreams[batch_id].resize(bs_sz);
-        std::cout << bs_sz << std::endl;
-
-        CHECK_NVJPEG2K(nvjpeg2kEncodeRetrieveBitstream(params.enc_handle, params.enc_state, bitstreams[batch_id].data(), &bs_sz,
-                                                       params.stream));
-        CHECK_CUDA(cudaStreamSynchronize(params.stream));
-    }
-
-    CHECK_CUDA(cudaEventRecord(stopEvent, params.stream));
-    CHECK_CUDA(cudaEventSynchronize(stopEvent));
-    CHECK_CUDA(cudaEventElapsedTime(&loopTime, startEvent, stopEvent));
-    time += static_cast<double>(loopTime / 1000.0); // loopTime is in milliseconds
-
-    CHECK_CUDA(cudaEventDestroy(stopEvent));
-    CHECK_CUDA(cudaEventDestroy(startEvent));
-    return EXIT_SUCCESS;
+    return call;
 }
 
 /**
@@ -185,64 +39,162 @@ int encode_images(Image *input_images, BitStreamData &bitstreams, double &time, 
  * @return nvJPEG2000 bitstream
  */
 float gpu_encode(unsigned char *images, int batch_size,
-                 int *height, int *width, int dev)
+                 int height, int width, int dev)
 {
-    encode_params_t params;
-    params.batch_size = batch_size;
-    params.cblk_w = 64;
-    params.cblk_h = 64;
-    params.dev = dev;
-    params.verbose = 1;
-    params.target_psnr = 6;
-    params.irreversible = 1; // reversible wavelet transform
+    nvjpeg2kEncoder_t enc_handle;      // nvJPEG2000 encoder handle
+    nvjpeg2kEncodeState_t enc_state;   // store the encoder work buffers and intermediate results
+    nvjpeg2kEncodeParams_t enc_params; // stores various parameters that control the compressed output
 
-    // device setting
-    cudaDeviceProp props;
-    cudaGetDevice(&dev);
-    cudaGetDeviceProperties(&props, dev);
+    // initialize the library handles
+    check_nvjpeg2k(nvjpeg2kEncoderCreateSimple(&enc_handle));
+    check_nvjpeg2k(nvjpeg2kEncodeStateCreate(enc_handle, &enc_state));
+    check_nvjpeg2k(nvjpeg2kEncodeParamsCreate(&enc_params));
 
-    cudaSetDevice(dev);
+    // initialise image
 
-    if (params.verbose)
+    std::vector<void *> pixel_data_d_;
+    std::vector<void *> pixel_data_h_;
+    std::vector<size_t> pitch_in_bytes_d_;
+    std::vector<size_t> pitch_in_bytes_h_;
+    std::vector<size_t> pixel_data_size_;
+    std::vector<nvjpeg2kImageComponentInfo_t> comp_info_;
+
+    pixel_data_h_.resize(NUM_COMPONENTS, nullptr);
+    pixel_data_d_.resize(NUM_COMPONENTS, nullptr);
+    pitch_in_bytes_h_.resize(NUM_COMPONENTS, 0);
+    pitch_in_bytes_d_.resize(NUM_COMPONENTS, 0);
+    pixel_data_size_.resize(NUM_COMPONENTS, 0);
+
+    /*
+    typedef struct
     {
-        printf("Using GPU - %s with CC %d.%d\n", props.name, props.major, props.minor);
+        void **pixel_data;
+        size_t *pitch_in_bytes;
+        nvjpeg2kImageType_t pixel_type;
+        uint32_t num_components;
+    } nvjpeg2kImage_t;
+    */
+    nvjpeg2kImage_t image_h_;
+    nvjpeg2kImage_t image_d_;
+
+    image_d_.pixel_data = pixel_data_d_.data();
+    image_d_.pitch_in_bytes = pitch_in_bytes_d_.data();
+    image_h_.pixel_data = pixel_data_h_.data();
+    image_h_.pitch_in_bytes = pitch_in_bytes_h_.data();
+    image_d_.pixel_type = NVJPEG2K_UINT8;
+    image_h_.pixel_type = NVJPEG2K_UINT8;
+    image_d_.num_components = NUM_COMPONENTS;
+    image_h_.num_components = image_d_.num_components;
+    int bytes_per_element = 1; // unsigned char
+
+    /*
+    typedef struct
+    {
+        uint32_t component_width;
+        uint32_t component_height;
+        uint8_t  precision;
+        uint8_t  sgn;
+    } nvjpeg2kImageComponentInfo_t;
+    */
+    nvjpeg2kImageComponentInfo_t image_comp_info[NUM_COMPONENTS];
+
+    uint32_t image_width = width;
+    uint32_t image_height = height;
+
+    for (int c = 0; c < NUM_COMPONENTS; c++)
+    {
+        image_comp_info[c].component_width = image_width;
+        image_comp_info[c].component_height = image_height;
+        image_comp_info[c].precision = 8;
+        image_comp_info[c].sgn = 0;
     }
 
-    // initialize encoder
-    CHECK_NVJPEG2K(nvjpeg2kEncoderCreateSimple(&params.enc_handle));
-    CHECK_NVJPEG2K(nvjpeg2kEncodeStateCreate(params.enc_handle, &params.enc_state));
-    CHECK_NVJPEG2K(nvjpeg2kEncodeParamsCreate(&params.enc_params));
-
-    // batch read array
-    if (params.verbose)
+    // malloc/ cudaMalloc
+    for (uint32_t c = 0; c < NUM_COMPONENTS; c++)
     {
-        printf("batch size: %d\n", params.batch_size);
+        image_d_.pitch_in_bytes[c] =
+            image_h_.pitch_in_bytes[c] = image_comp_info[c].component_width * bytes_per_element;
+        size_t comp_size = image_comp_info[c].component_height * image_d_.pitch_in_bytes[c];
+        if (comp_size > pixel_data_size_[c])
+        {
+            if (image_d_.pixel_data[c])
+            {
+                check_cuda(cudaFree(image_d_.pixel_data[c]));
+            }
+            if (image_h_.pixel_data[c])
+            {
+                free(image_h_.pixel_data[c]);
+            }
+            pixel_data_size_[c] = comp_size;
+            check_cuda(cudaMalloc(&image_d_.pixel_data[c], comp_size));
+            image_h_.pixel_data[c] = malloc(comp_size);
+        }
     }
 
-    std::vector<Image> input_images(params.batch_size);
-    CHECK_CUDA(cudaStreamCreateWithFlags(&params.stream, cudaStreamNonBlocking));
+    auto &img_h = image_h_;
+    unsigned char *r = reinterpret_cast<unsigned char *>(img_h.pixel_data[0]);
+    unsigned char *g = reinterpret_cast<unsigned char *>(img_h.pixel_data[1]);
+    unsigned char *b = reinterpret_cast<unsigned char *>(img_h.pixel_data[2]);
 
-    if (read_batch_images(images, height, width, input_images, params))
+    // host image data initialise
+    for (unsigned int y = 0; y < image_height; y++)
     {
-        return EXIT_FAILURE;
+        for (unsigned int x = 0; x < image_width; x++)
+        {
+            r[y * img_h.pitch_in_bytes[0] + x] = images[y * img_h.pitch_in_bytes[0] + (3 * x + 0)];
+            g[y * img_h.pitch_in_bytes[1] + x] = images[y * img_h.pitch_in_bytes[1] + (3 * x + 1)];
+            b[y * img_h.pitch_in_bytes[2] + x] = images[y * img_h.pitch_in_bytes[2] + (3 * x + 2)];
+        }
     }
 
-    // encode images
-    double time = 0; // perf
-    // typedef std::vector<std::vector<unsigned char>> BitStreamData
-    BitStreamData bitsteam_output(params.batch_size);
-
-    if (encode_images(input_images.data(), bitsteam_output, time, params))
+    // copy to device
+    auto &img_d = image_d_;
+    for (int c = 0; c < NUM_COMPONENTS; c++)
     {
-        return EXIT_FAILURE;
+        // cudaMallocPitch(&img_d.pixel_data[c], &img_d.pitch_in_bytes[c], image_comp_info[c].component_width, image_comp_info[c].component_height);
+        check_cuda(cudaMemcpy2D(img_d.pixel_data[c], img_d.pitch_in_bytes[c], img_h.pixel_data[c], img_h.pitch_in_bytes[c],
+                                image_comp_info[c].component_width * bytes_per_element,
+                                image_comp_info[c].component_height, cudaMemcpyHostToDevice));
     }
 
-    CHECK_CUDA(cudaStreamDestroy(params.stream));
+    // populate config
+    nvjpeg2kEncodeConfig_t enc_config;
+    memset(&enc_config, 0, sizeof(enc_config));
+    enc_config.stream_type = NVJPEG2K_STREAM_JP2;      // the bitstream will be in JP2 container format
+    enc_config.color_space = NVJPEG2K_COLORSPACE_SRGB; // input image is in RGB format
+    enc_config.image_width = image_width;
+    enc_config.image_height = image_height;
+    enc_config.num_components = NUM_COMPONENTS;
+    enc_config.image_comp_info = image_comp_info;
+    enc_config.code_block_w = 64;
+    enc_config.code_block_h = 64;
+    enc_config.irreversible = 0;
+    enc_config.mct_mode = 1;
+    enc_config.prog_order = NVJPEG2K_RPCL;
+    enc_config.num_resolutions = 1;
+
+    check_nvjpeg2k(nvjpeg2kEncodeParamsSetEncodeConfig(enc_params, &enc_config));
+    check_nvjpeg2k(nvjpeg2kEncodeParamsSetQuality(enc_params, 1000));
+    check_nvjpeg2k(nvjpeg2kEncode(enc_handle, enc_state, enc_params, &img_d, NULL));
+
+    size_t compressed_size;
+    check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, NULL, &compressed_size, NULL));
+
+    std::cout << compressed_size << std::endl;
+
+    unsigned char *compressed_data = new unsigned char [compressed_size];
+    check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, compressed_data, &compressed_size, NULL));
+    cudaDeviceSynchronize();
+
+    std::ofstream bitstream_file("image.jp2",
+                            std::ios::out | std::ios::binary);
+    bitstream_file.write((unsigned char*)compressed_data, compressed_size);
+    bitstream_file.close();
 
     // free encoder resources
-    CHECK_NVJPEG2K(nvjpeg2kEncodeParamsDestroy(params.enc_params));
-    CHECK_NVJPEG2K(nvjpeg2kEncodeStateDestroy(params.enc_state));
-    CHECK_NVJPEG2K(nvjpeg2kEncoderDestroy(params.enc_handle));
+    check_nvjpeg2k(nvjpeg2kEncodeParamsDestroy(enc_params));
+    check_nvjpeg2k(nvjpeg2kEncodeStateDestroy(enc_state));
+    check_nvjpeg2k(nvjpeg2kEncoderDestroy(enc_handle));
 
-    return images[0];
+    return 1;
 }
