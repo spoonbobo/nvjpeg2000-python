@@ -40,6 +40,7 @@ int check_nvjpeg2k(nvjpeg2kStatus_t call)
  */
 float gpu_encode(unsigned char *images, int batch_size,
                  int height, int width, int dev)
+                 
 {
     nvjpeg2kEncoder_t enc_handle;      // nvJPEG2000 encoder handle
     nvjpeg2kEncodeState_t enc_state;   // store the encoder work buffers and intermediate results
@@ -113,7 +114,7 @@ float gpu_encode(unsigned char *images, int batch_size,
     for (uint32_t c = 0; c < NUM_COMPONENTS; c++)
     {
         image_d_.pitch_in_bytes[c] =
-            image_h_.pitch_in_bytes[c] = image_comp_info[c].component_width * bytes_per_element;
+            image_h_.pitch_in_bytes[c] = image_comp_info[c].component_width * bytes_per_element * 3;
         size_t comp_size = image_comp_info[c].component_height * image_d_.pitch_in_bytes[c];
         if (comp_size > pixel_data_size_[c])
         {
@@ -188,7 +189,7 @@ float gpu_encode(unsigned char *images, int batch_size,
 
     std::ofstream bitstream_file("image.jp2",
                             std::ios::out | std::ios::binary);
-    bitstream_file.write((unsigned char*)compressed_data, compressed_size);
+    bitstream_file.write((char*)compressed_data, compressed_size);
     bitstream_file.close();
 
     // free encoder resources
