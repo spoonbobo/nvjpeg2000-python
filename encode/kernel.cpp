@@ -6,6 +6,7 @@
 
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
+#include "kernel.h"
 
 #define NUM_COMPONENTS 3
 
@@ -39,8 +40,8 @@ int check_nvjpeg2k(nvjpeg2kStatus_t call)
  * @return nvJPEG2000 bitstream
  */
 float gpu_encode(unsigned char *images, int batch_size,
-                 int height, int width, int dev)
-                 
+                 int *height, int *width, int dev)
+
 {
     nvjpeg2kEncoder_t enc_handle;      // nvJPEG2000 encoder handle
     nvjpeg2kEncodeState_t enc_state;   // store the encoder work buffers and intermediate results
@@ -52,7 +53,6 @@ float gpu_encode(unsigned char *images, int batch_size,
     check_nvjpeg2k(nvjpeg2kEncodeParamsCreate(&enc_params));
 
     // initialise image
-
     std::vector<void *> pixel_data_d_;
     std::vector<void *> pixel_data_h_;
     std::vector<size_t> pitch_in_bytes_d_;
@@ -88,19 +88,10 @@ float gpu_encode(unsigned char *images, int batch_size,
     image_h_.num_components = image_d_.num_components;
     int bytes_per_element = 1; // unsigned char
 
-    /*
-    typedef struct
-    {
-        uint32_t component_width;
-        uint32_t component_height;
-        uint8_t  precision;
-        uint8_t  sgn;
-    } nvjpeg2kImageComponentInfo_t;
-    */
     nvjpeg2kImageComponentInfo_t image_comp_info[NUM_COMPONENTS];
 
-    uint32_t image_width = width;
-    uint32_t image_height = height;
+    uint32_t image_width = width[0];
+    uint32_t image_height = height[0];
 
     for (int c = 0; c < NUM_COMPONENTS; c++)
     {
@@ -181,15 +172,16 @@ float gpu_encode(unsigned char *images, int batch_size,
     size_t compressed_size;
     check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, NULL, &compressed_size, NULL));
 
-    std::cout << compressed_size << std::endl;
+    // unsigned char *compressed_data = new unsigned char [compressed_size];
+    BitStreamData bitstreams(batch_size);
+    bitstreams[0].resize(compressed_size);
 
-    unsigned char *compressed_data = new unsigned char [compressed_size];
-    check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, compressed_data, &compressed_size, NULL));
+    check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, bitstreams[0].data(), &compressed_size, NULL));
     cudaDeviceSynchronize();
 
     std::ofstream bitstream_file("image.jp2",
-                            std::ios::out | std::ios::binary);
-    bitstream_file.write((char*)compressed_data, compressed_size);
+                                 std::ios::out | std::ios::binary);
+    bitstream_file.write((char *)bitstreams[0].data(), compressed_size);
     bitstream_file.close();
 
     // free encoder resources

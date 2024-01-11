@@ -38,5 +38,5 @@ ic(width+3)
 ic(images_flatten[width[0]*(height[0]-1):width[0]*(height[0]-1)+6])
 # ic(cuda_encode(images_flatten, len(images), height, width, 0))
 
-ic(cuda_encode(images_flatten, 1, height[0], width[0],  0))
-ic(dog.strides)
+ic(cuda_encode(images_flatten, 1, height, width,  0))
+# ic(dog.strides)
