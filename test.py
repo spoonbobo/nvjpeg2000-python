@@ -8,7 +8,7 @@ height = []
 width = []
 images = []
 
-image_paths = ["images/dog.jpeg"]
+image_paths = ["images/dog.jpeg", "images/cat.jpg"]
 for path in image_paths:
     image = np.array(Image.open(path)) # unsigned char: [0,255]
 
@@ -38,5 +38,5 @@ ic(width+3)
 ic(images_flatten[width[0]*(height[0]-1):width[0]*(height[0]-1)+6])
 # ic(cuda_encode(images_flatten, len(images), height, width, 0))
 
-ic(cuda_encode(images_flatten, 1, height, width,  0))
+ic(cuda_encode(images_flatten, len(images), height, width,  0))
 # ic(dog.strides)

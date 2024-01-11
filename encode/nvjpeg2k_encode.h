@@ -194,7 +194,7 @@ class Image
             bytes_per_element = 2;
         }
 
-        for(uint32_t c = 0; c < info_.num_components;c++)
+       for(uint32_t c = 0; c < info_.num_components;c++)
         {
             image_d_.pitch_in_bytes[c] = 
             image_h_.pitch_in_bytes[c] = comp_info_[c].component_width * bytes_per_element;
@@ -214,7 +214,7 @@ class Image
                 CHECK_CUDA(cudaMalloc(&image_d_.pixel_data[c], comp_size));
                 image_h_.pixel_data[c] = malloc(comp_size);
             }
-        }
+        } 
         return EXIT_SUCCESS;
     }
 
