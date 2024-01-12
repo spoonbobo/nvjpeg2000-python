@@ -38,13 +38,16 @@ for img in images:
 
 ic(len(images_flatten), height, width)
 dog = images[0]
-# ic(cuda_encode(images_flatten, len(images), height, width, 0))
 
 for i in range(10):
-    t1 = time.perf_counter()
+    t_nj = time.perf_counter()
     nj.encode(images[0])
-    ic("nvjpeg pypackage", time.perf_counter() - t1)
+    t_nj_elapsed = time.perf_counter() - t_nj
+    
+    ic(f"nvjpegPk: {t_nj_elapsed:.10f}")
 
-    t1 = time.perf_counter()
-    ic("nvjpeg2k", time.perf_counter() - t1)
-# ic(dog.strides)
+    t_nj2k = time.perf_counter()
+    nj_encoder.encodeJpeg2k(images_flatten, len(images), height, width, 0)
+    t_nj2k_elapsed = time.perf_counter() - t_nj2k
+
+    ic(f"nvjpeg2k: {t_nj2k_elapsed:.10f} ({t_nj_elapsed / t_nj2k_elapsed:.5f}x faster/ { t_nj2k_elapsed / t_nj_elapsed:.5f}x slower)")

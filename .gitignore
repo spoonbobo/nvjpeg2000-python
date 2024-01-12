@@ -15,3 +15,5 @@ wrapper.cpp
 build
 *.deb
 build_and_run.sh
+
+artifacts
