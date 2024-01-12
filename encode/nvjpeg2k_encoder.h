@@ -9,6 +9,10 @@
 float encodeJpeg2k_(unsigned char *image, int batch_size,
                  int *height, int *width, int dev);
 
+float encodeJpeg2kImageViewSingleBatch_(
+        unsigned char* r, unsigned char* g, unsigned char* b,
+        int height, int width, int dev);
+
 typedef std::vector<std::vector<unsigned char>> BitStreamData;
 
 // helper functions
@@ -117,7 +121,7 @@ struct Image
         }
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
-        std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
+        std::cout << "MemLoad Elapsed time: " << elapsed_seconds.count() << "s\n";
 
         // copy to device
         for (uint32_t c = 0; c < num_components; c++)

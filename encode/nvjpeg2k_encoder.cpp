@@ -44,7 +44,6 @@ float encodeJpeg2k_(unsigned char *images, int batch_size,
     input_images.resize(batch_size, nullptr);
     BitStreamData bitstreams(batch_size);
 
-    // TODO: make it optional
     bool write_output = true;
 
     for (int batch_id = 0; batch_id < batch_size; batch_id++)
@@ -58,7 +57,7 @@ float encodeJpeg2k_(unsigned char *images, int batch_size,
         check_nvjpeg2k(nvjpeg2kEncode(enc_handle, enc_state, enc_params, &input_images[batch_id]->image_d_, stream));
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
-        std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
+        std::cout << "Ebcide Elapsed time: " << elapsed_seconds.count() << "s\n";
 
         size_t compressed_size;
         check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, NULL, &compressed_size, stream));
@@ -92,4 +91,11 @@ float encodeJpeg2k_(unsigned char *images, int batch_size,
     check_nvjpeg2k(nvjpeg2kEncoderDestroy(enc_handle));
 
     return 1;
+}
+
+float encodeJpeg2kImageViewSingleBatch_(
+        unsigned char* r, unsigned char* g, unsigned char* b,
+        int height, int width, int dev)
+{
+    return 1.0f;
 }

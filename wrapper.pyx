@@ -1,15 +1,27 @@
 # cimport numpy as cnp
 from cython cimport wraparound, boundscheck, cdivision
+import numpy as np
+cimport numpy as cnp
 
 cdef extern from "encode/nvjpeg2k_encoder.h":
+
     float encodeJpeg2k_(unsigned char* image, int batch_size,
                     int *height, int *width, int dev)
+
+    float encodeJpeg2kImageViewSingleBatch_(
+        unsigned char* r, unsigned char* g, unsigned char* b,
+        int height, int width, int dev)
+
+cdef extern from "encode/nvjpeg2k_encoder.h":
+    float encodeJpeg_(unsigned char* r, int dev)
 
 cdef class NvJpegEncoder:
 
     def __init__(self):
         pass
 
+    # v1: non-optimized jpeg2k compression
+    # it involves loading in numpy array in cpp file
     @boundscheck(False)
     @wraparound(False)
     cpdef encodeJpeg2k(self, unsigned char[:] image, int batch_size, int[:] height, int[:] width, int dev):
@@ -30,8 +42,40 @@ cdef class NvJpegEncoder:
 
         result = encodeJpeg2k_(image_ptr, batch_size, height_ptr, width_ptr, dev)
         return result
+        # TODO return bytes (low-priority)
 
-class NvJpegDecoder:
+    # v2: more optimized jpeg2k optimization
+    @boundscheck(False)
+    @wraparound(False)
+    cpdef encodeJpeg2kImageViewSingleBatch(self, unsigned char[:,:,:] image, int dev):
+
+        cdef:
+            int height = image.shape[0]
+            int width = image.shape[1]
+            unsigned char[:] r, g, b
+
+        # 1d continguous array
+        r = np.ravel(image[:,:,0])
+        g = np.ravel(image[:,:,1])
+        b = np.ravel(image[:,:,2])
+        
+        return encodeJpeg2kImageViewSingleBatch_(&r[0], &g[0], &b[0], height, width, dev)
+
+    # v2: more optimized jpeg2k optimization
+    @boundscheck(False)
+    @wraparound(False)
+    cpdef encodeJpegImageViewSingleBatch(self, unsigned char[:,:,:] image, int dev):
+        pass
+        
+
+cdef class NvJpegDecoder:
 
     def __init__(self):
         pass
+
+    # TODO
+    @boundscheck(False)
+    @wraparound(False)
+    cpdef decodeJpegImageViewSingleBatch(self):
+        pass
+        
