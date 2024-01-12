@@ -1,11 +1,12 @@
 #pragma once
 #include <vector>
 #include <iostream>
+#include <chrono>
 
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
 
-float gpu_encode(unsigned char *image, int batch_size,
+float encodeJpeg2k_(unsigned char *image, int batch_size,
                  int *height, int *width, int dev);
 
 typedef std::vector<std::vector<unsigned char>> BitStreamData;
@@ -104,6 +105,7 @@ struct Image
         unsigned char *g = reinterpret_cast<unsigned char *>(image_h_.pixel_data[1]);
         unsigned char *b = reinterpret_cast<unsigned char *>(image_h_.pixel_data[2]);
 
+        auto start = std::chrono::steady_clock::now();
         for (unsigned int y = 0; y < image_height; y++)
         {
             for (unsigned int x = 0; x < image_width; x++)
@@ -113,6 +115,9 @@ struct Image
                 b[y * image_h_.pitch_in_bytes[2] + x] = image[y * image_h_.pitch_in_bytes[2] + (3 * x + 2)];
             }
         }
+        auto end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end - start;
+        std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 
         // copy to device
         for (uint32_t c = 0; c < num_components; c++)
@@ -135,13 +140,13 @@ struct Image
         enc_config.irreversible = 0;
         enc_config.mct_mode = 1;
         enc_config.prog_order = NVJPEG2K_RPCL;
-        enc_config.num_resolutions = 1;
+        enc_config.num_resolutions = 6;
     }
 
     // release resources
     ~Image()
     {
-        std::cout << "released resources" << std::endl;
+        // std::cout << "released resources" << std::endl;
         for (auto &ptr : pixel_data_d_)
         {
             if (ptr)

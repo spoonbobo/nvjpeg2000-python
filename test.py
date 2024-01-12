@@ -1,14 +1,19 @@
 # use PIL to decode image into RGB format and use cuda_encode to encode it into JPEG2000
-from cudaext import cuda_encode
+from cudaext import NvJpegEncoder
 import numpy as np
 from PIL import Image
 from icecream import ic
+import time
+from nvjpeg import NvJpeg
+nj = NvJpeg()
+
+nj_encoder = NvJpegEncoder()
 
 height = []
 width = []
 images = []
 
-image_paths = ["images/dog.jpeg", "images/cat.jpg"]
+image_paths = ["images/cat.jpg"]
 for path in image_paths:
     image = np.array(Image.open(path)) # unsigned char: [0,255]
 
@@ -33,10 +38,13 @@ for img in images:
 
 ic(len(images_flatten), height, width)
 dog = images[0]
-ic(dog[0,:10,:])
-ic(width+3)
-ic(images_flatten[width[0]*(height[0]-1):width[0]*(height[0]-1)+6])
 # ic(cuda_encode(images_flatten, len(images), height, width, 0))
 
-ic(cuda_encode(images_flatten, len(images), height, width,  0))
+for i in range(10):
+    t1 = time.perf_counter()
+    nj.encode(images[0])
+    ic("nvjpeg pypackage", time.perf_counter() - t1)
+
+    t1 = time.perf_counter()
+    ic("nvjpeg2k", time.perf_counter() - t1)
 # ic(dog.strides)

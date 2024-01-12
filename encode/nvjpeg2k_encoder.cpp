@@ -6,7 +6,8 @@
 
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
-#include "kernel.h"
+#include "nvjpeg2k_encoder.h"
+#include <chrono>
 
 #define NUM_COMPONENTS 3
 
@@ -21,7 +22,7 @@
  * @return nvJPEG2000 bitstream
  * @todo pass in image shapes
  */
-float gpu_encode(unsigned char *images, int batch_size,
+float encodeJpeg2k_(unsigned char *images, int batch_size,
                  int *height, int *width, int dev)
 
 {
@@ -51,8 +52,13 @@ float gpu_encode(unsigned char *images, int batch_size,
         input_images[batch_id] = new Image(&images[offset], width[batch_id], height[batch_id], 3, NVJPEG2K_UINT8);
 
         check_nvjpeg2k(nvjpeg2kEncodeParamsSetEncodeConfig(enc_params, &input_images[batch_id]->enc_config));
-        check_nvjpeg2k(nvjpeg2kEncodeParamsSetQuality(enc_params, 50));
+        check_nvjpeg2k(nvjpeg2kEncodeParamsSetQuality(enc_params, 25));
+
+        auto start = std::chrono::steady_clock::now();
         check_nvjpeg2k(nvjpeg2kEncode(enc_handle, enc_state, enc_params, &input_images[batch_id]->image_d_, stream));
+        auto end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end - start;
+        std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 
         size_t compressed_size;
         check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, NULL, &compressed_size, stream));
@@ -61,14 +67,15 @@ float gpu_encode(unsigned char *images, int batch_size,
 
         check_cuda(cudaStreamSynchronize(stream));
 
-        if (write_output)
-        {
-            std::string fname("image" + std::to_string(batch_id)+".jp2");
-            std::ofstream bitstream_file(fname,
-                                         std::ios::out | std::ios::binary);
-            bitstream_file.write((char *)bitstreams[batch_id].data(), compressed_size);
-            bitstream_file.close();
-        }
+        // if (write_output)
+        // {
+        //     std::string fname("image" + std::to_string(batch_id)+".jp2");
+        //     std::ofstream bitstream_file(fname,
+
+        //                                  std::ios::out | std::ios::binary);
+        //     bitstream_file.write((char *)bitstreams[batch_id].data(), compressed_size);
+        //     bitstream_file.close();
+        // }
         offset += width[batch_id] * height[batch_id] * 3;
     }
 

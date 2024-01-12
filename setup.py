@@ -58,7 +58,7 @@ CUDA = locate_cuda()
 ic(CUDA)
 
 ext = Extension('cudaext',
-                sources=['wrapper.pyx', 'encode/kernel.cpp'],
+                sources=['wrapper.pyx', 'encode/nvjpeg2k_encoder.cpp'],
                 libraries=['cudart', 'nvjpeg2k'],
                 language='c++',
                 include_dirs=[CUDA['include'], '/usr/include'],
