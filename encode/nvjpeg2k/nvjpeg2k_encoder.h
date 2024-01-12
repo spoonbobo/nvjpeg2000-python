@@ -6,16 +6,6 @@
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
 
-float encodeJpeg2k_(unsigned char *image, int batch_size,
-                 int *height, int *width, int dev);
-
-float encodeJpeg2kImageViewSingleBatch_(
-        unsigned char* r, unsigned char* g, unsigned char* b,
-        int height, int width, int dev);
-
-typedef std::vector<std::vector<unsigned char>> BitStreamData;
-
-// helper functions
 inline void check_cuda(cudaError_t status)
 {
     if (status != cudaSuccess)
@@ -34,6 +24,15 @@ inline int check_nvjpeg2k(nvjpeg2kStatus_t call)
     }
     return call;
 }
+
+float encodeJpeg2k_(unsigned char *image, int batch_size,
+                 int *height, int *width, int dev);
+
+float encodeJpeg2kImageViewSingleBatch_(
+        unsigned char* r, unsigned char* g, unsigned char* b,
+        int height, int width, int dev);
+
+typedef std::vector<std::vector<unsigned char>> BitStreamData;
 
 struct Image
 {
@@ -170,3 +169,5 @@ struct Image
         }
     }
 };
+
+// nvjpegv2

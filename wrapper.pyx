@@ -3,7 +3,7 @@ from cython cimport wraparound, boundscheck, cdivision
 import numpy as np
 cimport numpy as cnp
 
-cdef extern from "encode/nvjpeg2k_encoder.h":
+cdef extern from "encode/nvjpeg2k/nvjpeg2k_encoder.h":
 
     float encodeJpeg2k_(unsigned char* image, int batch_size,
                     int *height, int *width, int dev)
@@ -12,8 +12,10 @@ cdef extern from "encode/nvjpeg2k_encoder.h":
         unsigned char* r, unsigned char* g, unsigned char* b,
         int height, int width, int dev)
 
-cdef extern from "encode/nvjpeg2k_encoder.h":
+
+cdef extern from "encode/nvjpeg/nvjpeg_encoder.h":
     float encodeJpeg_(unsigned char* r, int dev)
+    
 
 cdef class NvJpegEncoder:
 
@@ -61,7 +63,8 @@ cdef class NvJpegEncoder:
         
         return encodeJpeg2kImageViewSingleBatch_(&r[0], &g[0], &b[0], height, width, dev)
 
-    # v2: more optimized jpeg2k optimization
+
+    # TODO
     @boundscheck(False)
     @wraparound(False)
     cpdef encodeJpegImageViewSingleBatch(self, unsigned char[:,:,:] image, int dev):

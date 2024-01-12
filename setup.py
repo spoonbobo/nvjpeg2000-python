@@ -60,14 +60,14 @@ ic(CUDA)
 ext = Extension('cudaext',
                 sources=[
                     'wrapper.pyx',
-                    'encode/nvjpeg2k_encoder.cpp',
-                    'encode/nvjpeg_encoder.cpp'
+                    'encode/nvjpeg2k/nvjpeg2k_encoder.cpp',
+                    'encode/nvjpeg/nvjpeg_encoder.cpp'
                 ],
                 libraries=['cudart', 'nvjpeg2k', 'nvjpeg'],
                 language='c++',
                 include_dirs=[CUDA['include']],
                 library_dirs=[CUDA['lib64']],
-                )
+                ) 
 
 setup(
     name='nvjpeg2000-python',

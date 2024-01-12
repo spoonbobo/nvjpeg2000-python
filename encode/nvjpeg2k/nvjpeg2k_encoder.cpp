@@ -6,10 +6,9 @@
 
 #include <cuda_runtime_api.h>
 #include <nvjpeg2k.h>
+
 #include "nvjpeg2k_encoder.h"
 #include <chrono>
-
-#define NUM_COMPONENTS 3
 
 /**
  * encode MemoryView arrays into nvJPEG2000 bitstream
@@ -57,7 +56,7 @@ float encodeJpeg2k_(unsigned char *images, int batch_size,
         check_nvjpeg2k(nvjpeg2kEncode(enc_handle, enc_state, enc_params, &input_images[batch_id]->image_d_, stream));
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
-        std::cout << "Ebcide Elapsed time: " << elapsed_seconds.count() << "s\n";
+        std::cout << "V1 Encode Elapsed time: " << elapsed_seconds.count() << "s\n";
 
         size_t compressed_size;
         check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, NULL, &compressed_size, stream));
@@ -97,5 +96,14 @@ float encodeJpeg2kImageViewSingleBatch_(
         unsigned char* r, unsigned char* g, unsigned char* b,
         int height, int width, int dev)
 {
-    return 1.0f;
+    nvjpeg2kEncoder_t enc_handle;      // nvJPEG2000 encoder handle
+    nvjpeg2kEncodeState_t enc_state;   // store the encoder work buffers and intermediate results
+    nvjpeg2kEncodeParams_t enc_params; // stores various parameters that control the compressed output
+
+    // initialize the library handles
+    check_nvjpeg2k(nvjpeg2kEncoderCreateSimple(&enc_handle));
+    check_nvjpeg2k(nvjpeg2kEncodeStateCreate(enc_handle, &enc_state));
+    check_nvjpeg2k(nvjpeg2kEncodeParamsCreate(&enc_params));
+
+
 }
