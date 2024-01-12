@@ -5,7 +5,6 @@ cdef extern from "encode/nvjpeg2k_encoder.h":
     float encodeJpeg2k_(unsigned char* image, int batch_size,
                     int *height, int *width, int dev)
 
-# MemoryView as lower-c performances 
 cdef class NvJpegEncoder:
 
     def __init__(self):
@@ -16,7 +15,7 @@ cdef class NvJpegEncoder:
     cpdef encodeJpeg2k(self, unsigned char[:] image, int batch_size, int[:] height, int[:] width, int dev):
         """
         encode image arrays into jpeg2000 bitstream# 
-        :param image: image(s) given batch_size
+        :param image: image(s) given batch_size in MemoryView
         :param batch_size: encode #batch_size image(s)
         :param height: height(s) of image(s), used for stride calculation
         :param width: width(s) of image(s), used for stride calculation
