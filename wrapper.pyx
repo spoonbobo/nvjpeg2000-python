@@ -10,9 +10,10 @@ cdef extern from "encode/nvjpeg2k/nvjpeg2k_encoder.h":
 
     float encodeJpeg2kImageViewSingleBatch_(
         unsigned char* r, unsigned char* g, unsigned char* b,
-        int height, int width, int dev)
+        int height, int width, int dim, int dev)
 
 
+# todo
 cdef extern from "encode/nvjpeg/nvjpeg_encoder.h":
     float encodeJpeg_(unsigned char* r, int dev)
     
@@ -24,6 +25,7 @@ cdef class NvJpegEncoder:
 
     # v1: non-optimized jpeg2k compression
     # it involves loading in numpy array in cpp file
+    # it assumes dim3/rgb image
     @boundscheck(False)
     @wraparound(False)
     cpdef encodeJpeg2k(self, unsigned char[:] image, int batch_size, int[:] height, int[:] width, int dev):
@@ -54,6 +56,7 @@ cdef class NvJpegEncoder:
         cdef:
             int height = image.shape[0]
             int width = image.shape[1]
+            int dim = image.shape[2]
             unsigned char[:] r, g, b
 
         # 1d continguous array
@@ -61,7 +64,7 @@ cdef class NvJpegEncoder:
         g = np.ravel(image[:,:,1])
         b = np.ravel(image[:,:,2])
         
-        return encodeJpeg2kImageViewSingleBatch_(&r[0], &g[0], &b[0], height, width, dev)
+        return encodeJpeg2kImageViewSingleBatch_(&r[0], &g[0], &b[0], height, width, dim, dev)
 
 
     # TODO

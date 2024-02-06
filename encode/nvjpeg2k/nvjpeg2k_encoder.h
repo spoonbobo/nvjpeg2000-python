@@ -30,7 +30,7 @@ float encodeJpeg2k_(unsigned char *image, int batch_size,
 
 float encodeJpeg2kImageViewSingleBatch_(
         unsigned char* r, unsigned char* g, unsigned char* b,
-        int height, int width, int dev);
+        int height, int width, int dim, int dev);
 
 typedef std::vector<std::vector<unsigned char>> BitStreamData;
 
@@ -120,7 +120,7 @@ struct Image
         }
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
-        std::cout << "MemLoad Elapsed time: " << elapsed_seconds.count() << "s\n";
+        std::cout << "V1 MemLoad Elapsed time: " << elapsed_seconds.count() << "s\n";
 
         // copy to device
         for (uint32_t c = 0; c < num_components; c++)
@@ -149,7 +149,19 @@ struct Image
     // release resources
     ~Image()
     {
-        // std::cout << "released resources" << std::endl;
+        nvjpeg2kImage_t image_h_;
+        nvjpeg2kImage_t image_d_;
+        std::vector<nvjpeg2kImageComponentInfo_t> comp_info_;
+        nvjpeg2kEncodeConfig_t enc_config;
+
+        std::vector<void *> pixel_data_d_;
+        std::vector<void *> pixel_data_h_;
+        std::vector<size_t> pitch_in_bytes_d_;
+        std::vector<size_t> pitch_in_bytes_h_;
+        std::vector<size_t> pixel_data_size_;
+
+        int bytes_per_element;
+
         for (auto &ptr : pixel_data_d_)
         {
             if (ptr)
@@ -171,3 +183,26 @@ struct Image
 };
 
 // nvjpegv2
+struct ImageV2 {
+
+    nvjpeg2kImage_t image_h_;
+    nvjpeg2kImage_t image_d_;
+    std::vector<nvjpeg2kImageComponentInfo_t> comp_info_;
+    nvjpeg2kEncodeConfig_t enc_config;
+
+    std::vector<void *> pixel_data_d_;
+    std::vector<void *> pixel_data_h_;
+    std::vector<size_t> pitch_in_bytes_d_;
+    std::vector<size_t> pitch_in_bytes_h_;
+    std::vector<size_t> pixel_data_size_;
+
+    int bytes_per_element;
+
+    ImageV2() {
+
+    }
+
+    ~ImageV2() {
+
+    }
+};

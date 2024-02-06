@@ -22,12 +22,15 @@
  * @todo pass in image shapes
  */
 float encodeJpeg2k_(unsigned char *images, int batch_size,
-                 int *height, int *width, int dev)
+                    int *height, int *width, int dev)
 
 {
     nvjpeg2kEncoder_t enc_handle;      // nvJPEG2000 encoder handle
     nvjpeg2kEncodeState_t enc_state;   // store the encoder work buffers and intermediate results
     nvjpeg2kEncodeParams_t enc_params; // stores various parameters that control the compressed output
+
+    // set device
+    check_cuda(cudaSetDevice(dev));
 
     // initialize the library handles
     check_nvjpeg2k(nvjpeg2kEncoderCreateSimple(&enc_handle));
@@ -74,6 +77,7 @@ float encodeJpeg2k_(unsigned char *images, int batch_size,
         //     bitstream_file.write((char *)bitstreams[batch_id].data(), compressed_size);
         //     bitstream_file.close();
         // }
+
         offset += width[batch_id] * height[batch_id] * 3;
     }
 
@@ -89,21 +93,32 @@ float encodeJpeg2k_(unsigned char *images, int batch_size,
     check_nvjpeg2k(nvjpeg2kEncodeStateDestroy(enc_state));
     check_nvjpeg2k(nvjpeg2kEncoderDestroy(enc_handle));
 
-    return 1;
+    return EXIT_SUCCESS;
 }
 
 float encodeJpeg2kImageViewSingleBatch_(
-        unsigned char* r, unsigned char* g, unsigned char* b,
-        int height, int width, int dev)
+    unsigned char *r, unsigned char *g, unsigned char *b,
+    int height, int width, int dim, int dev)
 {
     nvjpeg2kEncoder_t enc_handle;      // nvJPEG2000 encoder handle
     nvjpeg2kEncodeState_t enc_state;   // store the encoder work buffers and intermediate results
     nvjpeg2kEncodeParams_t enc_params; // stores various parameters that control the compressed output
+
+    // set device
+    check_cuda(cudaSetDevice(dev));
 
     // initialize the library handles
     check_nvjpeg2k(nvjpeg2kEncoderCreateSimple(&enc_handle));
     check_nvjpeg2k(nvjpeg2kEncodeStateCreate(enc_handle, &enc_state));
     check_nvjpeg2k(nvjpeg2kEncodeParamsCreate(&enc_params));
 
+    ImageV2 *input_image = new ImageV2(r, g, b, width, height, dim);
+    
+    free(input_image);
 
+    check_nvjpeg2k(nvjpeg2kEncodeParamsDestroy(enc_params));
+    check_nvjpeg2k(nvjpeg2kEncodeStateDestroy(enc_state));
+    check_nvjpeg2k(nvjpeg2kEncoderDestroy(enc_handle));
+
+    return EXIT_SUCCESS;
 }

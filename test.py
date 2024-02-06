@@ -7,6 +7,10 @@ import time
 from nvjpeg import NvJpeg
 nj = NvJpeg()
 
+ic.configureOutput(
+    includeContext=False, contextAbsPath=False, prefix=""
+)
+
 nj_encoder = NvJpegEncoder()
 
 height = []
