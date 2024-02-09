@@ -59,6 +59,8 @@ cdef class NvJpegEncoder:
             int dim = image.shape[2]
             unsigned char[:] r, g, b
 
+        # print(width, height, dim)
+
         # 1d continguous array
         r = np.ravel(image[:,:,0])
         g = np.ravel(image[:,:,1])

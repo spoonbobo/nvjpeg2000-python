@@ -114,15 +114,30 @@ float encodeJpeg2kImageViewSingleBatch_(
 
     ImageV2 *input_image = new ImageV2(r, g, b, width, height, dim, NVJPEG2K_UINT8);
     BitStreamData bitstreams(1);
+    bool write_output = true;
+
+    // printf("image width height: (%d, %d)\n", input_image->enc_config.image_width, input_image->enc_config.image_height);
 
     check_nvjpeg2k(nvjpeg2kEncodeParamsSetEncodeConfig(enc_params, &input_image->enc_config));
-    // check_nvjpeg2k(nvjpeg2kEncodeParamsSetQuality(enc_params, 25));
+    check_nvjpeg2k(nvjpeg2kEncodeParamsSetQuality(enc_params, 25));
     check_nvjpeg2k(nvjpeg2kEncode(enc_handle, enc_state, enc_params, &input_image->image_d_, nullptr));
 
     size_t compressed_size;
     check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, NULL, &compressed_size, nullptr));
     bitstreams[0].resize(compressed_size);
+    std::cout << compressed_size << std::endl;
     check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, bitstreams[0].data(), &compressed_size, nullptr));
+
+    if (write_output)
+    {
+        std::string fname("image" + std::to_string(0)+".jp2");
+        std::ofstream bitstream_file(fname,
+
+                                        std::ios::out | std::ios::binary);
+        bitstream_file.write((char *)bitstreams[0].data(), compressed_size);
+        bitstream_file.close();
+    }
+
     // release resources
     delete input_image;
 

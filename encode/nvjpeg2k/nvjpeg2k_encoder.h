@@ -203,6 +203,7 @@ struct ImageV2
         unsigned char *r, unsigned char *g, unsigned char *b,
         uint32_t image_width, uint32_t image_height, uint32_t num_components, nvjpeg2kImageType_t pixel_type)
     {
+        // std::cout << "parsed width height: " << image_width << " " << image_height << std::endl;
         pixel_data_h_.resize(num_components, nullptr);
         pixel_data_d_.resize(num_components, nullptr);
         pitch_in_bytes_h_.resize(num_components, 0);
@@ -260,11 +261,15 @@ struct ImageV2
         unsigned char *g_h = reinterpret_cast<unsigned char *>(image_h_.pixel_data[1]);
         unsigned char *b_h = reinterpret_cast<unsigned char *>(image_h_.pixel_data[2]);
 
-        r_h = r;
-        g_h = g;
-        b_h = b;
-
-        std::cout << (int)r[0] << std::endl;
+        for (unsigned int y = 0; y < image_height; y++)
+        {
+            for (unsigned int x = 0; x < image_width; x++)
+            {
+                r_h[y * image_h_.pitch_in_bytes[0] + x] = r[y * image_width + x];
+                g_h[y * image_h_.pitch_in_bytes[1] + x] = g[y * image_width + x];
+                b_h[y * image_h_.pitch_in_bytes[2] + x] = b[y * image_width + x];
+            }
+        }
 
         for (uint32_t c = 0; c < num_components; c++)
         {
@@ -272,6 +277,21 @@ struct ImageV2
                                     comp_info_[c].component_width * bytes_per_element,
                                     comp_info_[c].component_height, cudaMemcpyHostToDevice));
         }
+
+        // encode configurations
+        memset(&enc_config, 0, sizeof(enc_config));
+        enc_config.stream_type = NVJPEG2K_STREAM_JP2;
+        enc_config.color_space = NVJPEG2K_COLORSPACE_SRGB;
+        enc_config.image_width = image_width;
+        enc_config.image_height = image_height;
+        enc_config.num_components = num_components;
+        enc_config.image_comp_info = comp_info_.data();
+        enc_config.code_block_w = 64;
+        enc_config.code_block_h = 64;
+        enc_config.irreversible = 0;
+        enc_config.mct_mode = 1;
+        enc_config.prog_order = NVJPEG2K_RPCL;
+        enc_config.num_resolutions = 6;
     }
 
     ~ImageV2()
