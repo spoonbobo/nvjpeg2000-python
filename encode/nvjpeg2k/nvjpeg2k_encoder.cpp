@@ -112,9 +112,19 @@ float encodeJpeg2kImageViewSingleBatch_(
     check_nvjpeg2k(nvjpeg2kEncodeStateCreate(enc_handle, &enc_state));
     check_nvjpeg2k(nvjpeg2kEncodeParamsCreate(&enc_params));
 
-    ImageV2 *input_image = new ImageV2(r, g, b, width, height, dim);
-    
-    free(input_image);
+    ImageV2 *input_image = new ImageV2(r, g, b, width, height, dim, NVJPEG2K_UINT8);
+    BitStreamData bitstreams(1);
+
+    check_nvjpeg2k(nvjpeg2kEncodeParamsSetEncodeConfig(enc_params, &input_image->enc_config));
+    // check_nvjpeg2k(nvjpeg2kEncodeParamsSetQuality(enc_params, 25));
+    check_nvjpeg2k(nvjpeg2kEncode(enc_handle, enc_state, enc_params, &input_image->image_d_, nullptr));
+
+    size_t compressed_size;
+    check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, NULL, &compressed_size, nullptr));
+    bitstreams[0].resize(compressed_size);
+    check_nvjpeg2k(nvjpeg2kEncodeRetrieveBitstream(enc_handle, enc_state, bitstreams[0].data(), &compressed_size, nullptr));
+    // release resources
+    delete input_image;
 
     check_nvjpeg2k(nvjpeg2kEncodeParamsDestroy(enc_params));
     check_nvjpeg2k(nvjpeg2kEncodeStateDestroy(enc_state));

@@ -56,9 +56,9 @@ for i in range(1):
 
     ic(f"nvjpeg2k(v1): {t_nj2k_elapsed:.10f} ({t_nj_elapsed / t_nj2k_elapsed:.5f}x faster/ { t_nj2k_elapsed / t_nj_elapsed:.5f}x slower)")
 
-    # nvjpeg2k v2
+    # nvjpeg2k v2f
     t_nj2kv2 = time.perf_counter()
     r = nj_encoder.encodeJpeg2kImageViewSingleBatch(dog, 0)
     t_nj2k_elapsed = time.perf_counter() - t_nj2kv2
 
-    ic(f"nvjpeg2k(v1): {t_nj2k_elapsed:.10f} ({t_nj_elapsed / t_nj2k_elapsed:.5f}x faster/ { t_nj2k_elapsed / t_nj_elapsed:.5f}x slower)")
+    ic(f"nvjpeg2k(v2): {t_nj2k_elapsed:.10f} ({t_nj_elapsed / t_nj2k_elapsed:.5f}x faster/ { t_nj2k_elapsed / t_nj_elapsed:.5f}x slower)")
